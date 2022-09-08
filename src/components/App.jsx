@@ -4,16 +4,33 @@ import { ContactList } from './ContactList/ContactList';
 import { Box } from './Box';
 import { Filter } from './Filter/Filter';
 
+const LS_KEY = 'contactList';
+
 export class App extends Component {
   state = {
     contacts: [
-      { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-      { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-      { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-      { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
+      // { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
+      // { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
+      // { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
+      // { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
     ],
     filter: '',
   };
+  componentDidMount() {
+    const contactsFromLS = JSON.parse(localStorage.getItem(LS_KEY));
+    if (contactsFromLS) {
+      this.setState({
+        contacts: contactsFromLS,
+      });
+    }
+  }
+
+  componentDidUpdate(_, prevState) {
+    if (prevState.contacts !== this.state.contacts) {
+      const contacts = JSON.stringify(this.state.contacts);
+      localStorage.setItem(LS_KEY, contacts);
+    }
+  }
 
   handleSubmitForm = contact => {
     this.state.contacts.find(
@@ -36,10 +53,12 @@ export class App extends Component {
   };
 
   render() {
-    const normalFilter = this.state.filter.toLowerCase();
-    const visibleContacts = this.state.contacts.filter(contact =>
+    const { contacts, filter } = this.state;
+    const normalFilter = filter.toLowerCase();
+    const visibleContacts = contacts.filter(contact =>
       contact.name.toLowerCase().includes(normalFilter)
     );
+
     return (
       <Box p={10}>
         <h2>Phonebook</h2>
@@ -47,12 +66,16 @@ export class App extends Component {
         <ContactForm onSubmit={this.handleSubmitForm} />
 
         <h2>Contacts</h2>
-        <Filter value={this.state.filter} onChange={this.changeFilter} />
+        <Filter value={filter} onChange={this.changeFilter} />
 
-        <ContactList
-          contacts={visibleContacts}
-          onDeleteBtn={this.onDeleteContact}
-        />
+        {contacts.length === 0 ? (
+          <h3>Please, add new contact</h3>
+        ) : (
+          <ContactList
+            contacts={visibleContacts}
+            onDeleteBtn={this.onDeleteContact}
+          />
+        )}
       </Box>
     );
   }
